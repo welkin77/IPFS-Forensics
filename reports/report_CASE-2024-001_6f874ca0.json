@@ -1,0 +1,71 @@
+{
+    "case_info": {
+        "case_id": "CASE-2024-001",
+        "case_name": "API触发的取证任务",
+        "generation_time": "2026-03-18T09:35:41.971648"
+    },
+    "evidence_summary": {
+        "cid": "QmbzRaH2BqcwbaPe3YMqzQSdHkByxFWK5DNd9cQTioMD2t",
+        "acquisition_time": "2026-03-18T09:35:41.971648",
+        "file_size_bytes": 17146,
+        "hash_values": {
+            "sha256": "9d7da150db295e32437b9c2e11de9afe81ca73d2d484cc5b8c32cf4881af0b2a",
+            "sha512": "9f1c48338dd2995103dd7ed1f5d6d6a8490c6e3f29f28991aaba68415e4f3ef181cf130f49416ed675db12fd429ba95a471242cd8129f20a46453db6571d5dd5",
+            "keccak256": "d83c8bc87105fd91a196d05749156b66520f8f31a7b31dd0d6abfd32cf3ed348"
+        }
+    },
+    "verification_proof": {
+        "merkle_root": "c6e98a48f005918dfdd6f7552f705d0e9dc1606daed5143cde8299040567673e",
+        "verification_steps": [
+            "1. 从公网IPFS网关/节点获取数据",
+            "2. 计算 SHA256 与 SHA512 本地司法哈希",
+            "3. 计算 Keccak-256 以太坊上链哈希",
+            "4. 构建证据及元数据的默克尔树"
+        ]
+    },
+    "chain_of_custody": [
+        {
+            "timestamp": "2026-03-18T09:35:41.162867",
+            "action": "立案初始化 (API)",
+            "operator": "Police_001_Sys",
+            "details": "{\"cid\": \"QmbzRaH2BqcwbaPe3YMqzQSdHkByxFWK5DNd9cQTioMD2t\"}",
+            "previous_hash": "GENESIS_BLOCK",
+            "record_hash": "aa7da983e2bc15bddc28e43a4625c0d5c09e3775e3f91d4336e62041eb10ce3c"
+        },
+        {
+            "timestamp": "2026-03-18T09:35:41.599194",
+            "action": "数据采集",
+            "operator": "Police_001_Sys",
+            "details": "{\"bytes_downloaded\": 17146}",
+            "previous_hash": "aa7da983e2bc15bddc28e43a4625c0d5c09e3775e3f91d4336e62041eb10ce3c",
+            "record_hash": "e326573d130b2d95ecdded2a35d2474eb542b73104c86d1ee47704ffdd64955b"
+        },
+        {
+            "timestamp": "2026-03-18T09:35:41.971135",
+            "action": "内容审查",
+            "operator": "System_Analyzer",
+            "details": "{\"file_type\": \"image/jpeg\", \"is_illegal\": true}",
+            "previous_hash": "e326573d130b2d95ecdded2a35d2474eb542b73104c86d1ee47704ffdd64955b",
+            "record_hash": "23a191d35ec0b898c9e711f4a3518e3f136ccc8ded585d9c67b03ea901138341"
+        },
+        {
+            "timestamp": "2026-03-18T09:35:41.971648",
+            "action": "证据固定",
+            "operator": "System_Hasher",
+            "details": "{\"merkle_root\": \"c6e98a48f005918dfdd6f7552f705d0e9dc1606daed5143cde8299040567673e\", \"sha256\": \"9d7da150db295e32437b9c2e11de9afe81ca73d2d484cc5b8c32cf4881af0b2a\"}",
+            "previous_hash": "23a191d35ec0b898c9e711f4a3518e3f136ccc8ded585d9c67b03ea901138341",
+            "record_hash": "03765990c3eb08afbbe8afe9ab1d696026cfce8a5dbdebdaa285bd85557088fe"
+        }
+    ],
+    "analysis_results": {
+        "file_type": "image/jpeg",
+        "is_illegal": true,
+        "risk_level": "high",
+        "matched_keywords": [
+            "赌博"
+        ],
+        "analysis_method": "Pillow + Tesseract OCR",
+        "extracted_text": "家乐、德州扑克、赌博技巧分享，注册送彩金! 每日返水3%，真人荷官在线发牌，支持数字货币充"
+    },
+    "legal_attestation": "本报告由系统自动生成，哈希链完整，符合电子数据取证技术标准。"
+}

@@ -1,0 +1,69 @@
+{
+    "case_info": {
+        "case_id": "CASE-2026-03-18-006",
+        "case_name": "API触发的取证任务",
+        "generation_time": "2026-03-18T10:04:13.517674"
+    },
+    "evidence_summary": {
+        "cid": "bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
+        "acquisition_time": "2026-03-18T10:04:13.517674",
+        "file_size_bytes": 119762,
+        "hash_values": {
+            "sha256": "c7d01489080858c500065836c658f847a6ca67c4864619212be4f8200e4bbace",
+            "sha512": "78bef9212fe1dfa27e6e6392c8593234231aa3e4941c1d33589e12b878ed0663feda3d2317a4fa425115ccd33f731adce30b9dffa4af220fc76d3ceec515d934",
+            "keccak256": "43b1c5728fcbab3a122c40c2daecff6eed4dcd635ae131bfe199e3cd188e2089"
+        }
+    },
+    "verification_proof": {
+        "merkle_root": "ef9253bded33e4677f6debdf561e0569e283170294dcfc7f24e7f447f3119091",
+        "verification_steps": [
+            "1. 从公网IPFS网关/节点获取数据",
+            "2. 计算 SHA256 与 SHA512 本地司法哈希",
+            "3. 计算 Keccak-256 以太坊上链哈希",
+            "4. 构建证据及元数据的默克尔树"
+        ]
+    },
+    "chain_of_custody": [
+        {
+            "timestamp": "2026-03-18T10:04:12.564479",
+            "action": "立案初始化 (API)",
+            "operator": "ADMIN",
+            "details": "{\"cid\": \"bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi\"}",
+            "previous_hash": "GENESIS_BLOCK",
+            "record_hash": "3f6fbe8fb0ba85cf566168cdaeb350ad6e5bf54b99f25b1f66437ba847a6463a"
+        },
+        {
+            "timestamp": "2026-03-18T10:04:13.215019",
+            "action": "数据采集",
+            "operator": "ADMIN",
+            "details": "{\"bytes_downloaded\": 119762}",
+            "previous_hash": "3f6fbe8fb0ba85cf566168cdaeb350ad6e5bf54b99f25b1f66437ba847a6463a",
+            "record_hash": "16323034acdccdf58e82156377cdd5a9d6f2854df6066b605aa9cf6dda39d5ef"
+        },
+        {
+            "timestamp": "2026-03-18T10:04:13.517674",
+            "action": "内容审查",
+            "operator": "System_Analyzer",
+            "details": "{\"file_type\": \"image/jpeg\", \"is_illegal\": false}",
+            "previous_hash": "16323034acdccdf58e82156377cdd5a9d6f2854df6066b605aa9cf6dda39d5ef",
+            "record_hash": "956c2a99f96bad4fd0b048d47678a677e8557a94061b2f44359f6899f81bb8de"
+        },
+        {
+            "timestamp": "2026-03-18T10:04:13.518674",
+            "action": "证据固定",
+            "operator": "System_Hasher",
+            "details": "{\"merkle_root\": \"ef9253bded33e4677f6debdf561e0569e283170294dcfc7f24e7f447f3119091\", \"sha256\": \"c7d01489080858c500065836c658f847a6ca67c4864619212be4f8200e4bbace\"}",
+            "previous_hash": "956c2a99f96bad4fd0b048d47678a677e8557a94061b2f44359f6899f81bb8de",
+            "record_hash": "b3a702fd3eaa528274c3542320f0f2330cf4f4965b93df63871ca8c2bc62dedb"
+        }
+    ],
+    "analysis_results": {
+        "file_type": "image/jpeg",
+        "is_illegal": false,
+        "risk_level": "low",
+        "matched_keywords": [],
+        "analysis_method": "Pillow + Tesseract OCR",
+        "extracted_text": ""
+    },
+    "legal_attestation": "本报告由系统自动生成，哈希链完整，符合电子数据取证技术标准。"
+}

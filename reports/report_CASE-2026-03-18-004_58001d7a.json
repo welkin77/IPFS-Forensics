@@ -1,0 +1,69 @@
+{
+    "case_info": {
+        "case_id": "CASE-2026-03-18-004",
+        "case_name": "API触发的取证任务",
+        "generation_time": "2026-03-18T10:03:13.804531"
+    },
+    "evidence_summary": {
+        "cid": "QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG",
+        "acquisition_time": "2026-03-18T10:03:13.804531",
+        "file_size_bytes": 254084,
+        "hash_values": {
+            "sha256": "4ee10248cf3f6f91ef492c21a33b811d5f5b5348943d437ec35af7bc88cb3aec",
+            "sha512": "7ca84495636abcea8321918edfa6c0e87e3b82fb7d8470faa6a73c51dd165225b963b59294de0ec75094b06028450a09239f169e50627de035b5831dcdf4db4e",
+            "keccak256": "6ecf40294c3e32b8c2a320bfba8f95100a3facbeed852d1a566f019856bf429b"
+        }
+    },
+    "verification_proof": {
+        "merkle_root": "1721818a573046b438286150d991d76301c9332b400a53b41335045d3c103fee",
+        "verification_steps": [
+            "1. 从公网IPFS网关/节点获取数据",
+            "2. 计算 SHA256 与 SHA512 本地司法哈希",
+            "3. 计算 Keccak-256 以太坊上链哈希",
+            "4. 构建证据及元数据的默克尔树"
+        ]
+    },
+    "chain_of_custody": [
+        {
+            "timestamp": "2026-03-18T10:03:13.039788",
+            "action": "立案初始化 (API)",
+            "operator": "ADMIN",
+            "details": "{\"cid\": \"QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG\"}",
+            "previous_hash": "GENESIS_BLOCK",
+            "record_hash": "8664b9a4f61c136b4e1794698b53f66ac77d267205443ab24d0848338906f40d"
+        },
+        {
+            "timestamp": "2026-03-18T10:03:13.564796",
+            "action": "数据采集",
+            "operator": "ADMIN",
+            "details": "{\"bytes_downloaded\": 254084}",
+            "previous_hash": "8664b9a4f61c136b4e1794698b53f66ac77d267205443ab24d0848338906f40d",
+            "record_hash": "ceabb74bece6061d3953911bf211a8f9e86dfac3683275a515af5af369c41c8a"
+        },
+        {
+            "timestamp": "2026-03-18T10:03:13.803491",
+            "action": "内容审查",
+            "operator": "System_Analyzer",
+            "details": "{\"file_type\": \"text/plain\", \"is_illegal\": false}",
+            "previous_hash": "ceabb74bece6061d3953911bf211a8f9e86dfac3683275a515af5af369c41c8a",
+            "record_hash": "029204509290a382ae9c34e064dfc93b60b2f62db46b58af7fa87f5898512927"
+        },
+        {
+            "timestamp": "2026-03-18T10:03:13.805543",
+            "action": "证据固定",
+            "operator": "System_Hasher",
+            "details": "{\"merkle_root\": \"1721818a573046b438286150d991d76301c9332b400a53b41335045d3c103fee\", \"sha256\": \"4ee10248cf3f6f91ef492c21a33b811d5f5b5348943d437ec35af7bc88cb3aec\"}",
+            "previous_hash": "029204509290a382ae9c34e064dfc93b60b2f62db46b58af7fa87f5898512927",
+            "record_hash": "1d1f8d61684d8f3de853047aed9ee95dd140db5c2a2e293a5f1105b437b51754"
+        }
+    ],
+    "analysis_results": {
+        "file_type": "text/plain",
+        "is_illegal": false,
+        "risk_level": "low",
+        "matched_keywords": [],
+        "analysis_method": "NLP/Jieba",
+        "extracted_text": "<!DOCTYPE html>\n\n<html lang=\"en\">\n<head>\n  <meta charset=\"utf-8\" />\n  <meta name=\"description\" content=\"A directory of content-addressed files hosted on IPFS.\">\n  <meta name=\"viewport\" content=\"width=..."
+    },
+    "legal_attestation": "本报告由系统自动生成，哈希链完整，符合电子数据取证技术标准。"
+}
