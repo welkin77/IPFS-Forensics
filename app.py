@@ -234,7 +234,6 @@ def api_collect():
     if not cid:
         return '<div class="alert alert-danger">请输入CID</div>'
 
-    # 自动生成案件编号
     if not case_id:
         case_id = f"CASE-{datetime.now().strftime('%Y-%m%d')}-{uuid.uuid4().hex[:6].upper()}"
 
@@ -263,18 +262,18 @@ def api_collect():
             "is_illegal": analysis_results['is_illegal']
         })
 
-        # 4. 证据固定
+        # 4. 证据固定（多重哈希 + 证据包整体哈希）
         metadata = {
             "investigator": investigator_id,
             "tool": "IPFS_Forensics_V2_Flask",
             "case_number": case_id
         }
         evidence = EvidencePackage(cid=cid, content=content, metadata=metadata)
-        merkle_proof = evidence.build_merkle_proof()
+        integrity_proof = evidence.build_integrity_proof()
 
         custody.add_record("证据固定", "System_Hasher", {
             "sha256": evidence.hashes['sha256'],
-            "merkle_root": merkle_proof['merkle_root']
+            "integrity_hash": integrity_proof['integrity_hash']
         })
 
         # 5. 可信时间戳
@@ -319,7 +318,7 @@ def api_collect():
                 extracted_text=analysis_results.get('extracted_text', ''),
                 sha256=evidence.hashes['sha256'],
                 keccak256=evidence.hashes.get('keccak256', ''),
-                merkle_root=merkle_proof['merkle_root'],
+                merkle_root=integrity_proof['integrity_hash'],  # 字段复用：存整体哈希
                 report_data=json.dumps(report_data, ensure_ascii=False)
             )
             db.add(db_record)
@@ -338,7 +337,7 @@ def api_collect():
             case_id=case_id,
             cid=cid,
             report_data=report_data,
-            merkle_root=merkle_proof['merkle_root'],
+            integrity_hash=integrity_proof['integrity_hash'],
             timestamp_result=timestamp_result,
             analysis_results=analysis_results,
             evidence=evidence,
@@ -348,7 +347,6 @@ def api_collect():
     except Exception as e:
         logger.error(f"取证失败: {e}", exc_info=True)
         return f'<div class="alert alert-danger">取证过程发生错误: {str(e)}</div>'
-
 
 @app.route('/api/export-pdf', methods=['POST'])
 def api_export_pdf():
