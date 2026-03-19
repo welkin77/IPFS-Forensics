@@ -6,6 +6,7 @@
   ],
   "compilerOptions": {
     "verbatimModuleSyntax": true,
+    "module": "ESNext", 
     "moduleResolution": "bundler" // 确保这一项是 "bundler"
   }
 }

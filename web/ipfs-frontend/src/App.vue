@@ -15,6 +15,8 @@
         <el-menu-item index="/gather">
           <el-icon><Monitor /></el-icon>
           <span>全网情报采集</span>
+          <!-- ★ 改动1：侧边栏显示雷达运行状态 -->
+          <span v-if="radarStore.isMonitoring" class="radar-badge">● 扫描中</span>
         </el-menu-item>
         <el-menu-item index="/evidence">
           <el-icon><Document /></el-icon>
@@ -39,12 +41,17 @@
         </div>
       </el-header>
       <el-main class="main-content">
-        <!-- 路由出口 -->
         <router-view />
       </el-main>
     </el-container>
   </el-container>
 </template>
+
+<!-- ★ 改动2：加 script 导入 store -->
+<script setup lang="ts">
+import { useRadarStore } from './stores/radar'
+const radarStore = useRadarStore()
+</script>
 
 <style scoped>
 .layout-container {
@@ -80,6 +87,18 @@
 .main-content {
   background-color: #f0f2f5;
   padding: 20px;
+}
+
+/* ★ 新增：雷达状态徽标样式 */
+.radar-badge {
+  margin-left: 6px;
+  color: #67c23a;
+  font-size: 12px;
+  animation: radar-blink 1.5s ease-in-out infinite;
+}
+@keyframes radar-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
 }
 </style>
 

@@ -8,7 +8,7 @@
           <template #header><div class="card-header"><span>多源嗅探控制台</span></div></template>
           
           <div class="control-panel">
-            <el-input v-model="scanKeyword" placeholder="输入涉案关键字 (如: 诈骗, 赌博)" class="mb-3">
+            <el-input v-model="radarStore.scanKeyword" placeholder="输入涉案关键字 (如: 诈骗, 赌博)" class="mb-3">
               <template #prepend>监控词</template>
             </el-input>
             
@@ -18,38 +18,36 @@
               <el-checkbox v-model="sources.dark" disabled checked>暗网/洋葱路由</el-checkbox>
             </div>
 
-            <!-- 核心按钮：切换雷达状态 -->
             <el-button 
-              :type="isMonitoring ? 'danger' : 'primary'" 
-              @click="toggleMonitor" 
+              :type="radarStore.isMonitoring ? 'danger' : 'primary'" 
+              @click="radarStore.toggleMonitor()" 
               class="scan-btn" 
-              :icon="isMonitoring ? 'Loading' : 'Aim'"
+              :icon="radarStore.isMonitoring ? 'Loading' : 'Aim'"
             >
-              {{ isMonitoring ? '🔴 停止实时监控' : '🟢 开启实时情报雷达' }}
+              {{ radarStore.isMonitoring ? '🔴 停止实时监控' : '🟢 开启实时情报雷达' }}
             </el-button>
           </div>
 
-          <!-- 模拟黑客风的日志终端 -->
           <div class="terminal-box" ref="terminalRef">
-            <div v-for="(log, idx) in scanLogs" :key="idx" :class="log.type">
+            <div v-for="(log, idx) in radarStore.scanLogs" :key="idx" :class="log.type">
               <span class="time-prefix">[{{ log.time }}]</span> > {{ log.text }}
             </div>
-            <div v-if="isMonitoring" class="cursor-blink">_</div>
+            <div v-if="radarStore.isMonitoring" class="cursor-blink">_</div>
           </div>
         </el-card>
       </el-col>
 
-      <!-- 右侧：发现的线索池 (Clue Pool) -->
+      <!-- 右侧：发现的线索池 -->
       <el-col :span="16">
         <el-card shadow="never" class="table-card">
           <template #header>
             <div class="card-header">
               <span>全网情报线索池 (Clue Pool)</span>
-              <el-button type="primary" size="small" plain @click="fetchClues" icon="Refresh">刷新线索</el-button>
+              <el-button type="primary" size="small" plain @click="radarStore.fetchClues()" icon="Refresh">刷新线索</el-button>
             </div>
           </template>
 
-          <el-table :data="clueList" border stripe height="calc(100vh - 220px)" v-loading="tableLoading">
+          <el-table :data="radarStore.clueList" border stripe height="calc(100vh - 220px)" v-loading="radarStore.tableLoading">
             <el-table-column prop="discovered_at" label="发现时间" width="160">
               <template #default="scope">{{ formatTime(scope.row.discovered_at) }}</template>
             </el-table-column>
@@ -84,109 +82,48 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, onMounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { clueApi } from '../api/index'
 import { ElMessage } from 'element-plus'
+import { useRadarStore } from '../stores/radar'
 
+const radarStore = useRadarStore()
 const router = useRouter()
-const scanKeyword = ref('') // 默认给点关键字
-const isMonitoring = ref(false)
-const tableLoading = ref(false)
-const clueList = ref<any[]>([])
 const sources = ref({ dht: true, tg: true, dark: true })
-
-let monitorInterval: ReturnType<typeof setInterval> | null = null
-
-// 终端日志
 const terminalRef = ref<HTMLElement | null>(null)
-const scanLogs = ref<{time: string, text: string, type: string}[]>([])
 
-// 记录日志并自动滚动
-const pushLog = (text: string, type = "info") => {
-  const now = new Date()
-  const timeStr = now.toLocaleTimeString()
-  scanLogs.value.push({ time: timeStr, text, type })
-  
-  nextTick(() => {
-    if (terminalRef.value) {
-      terminalRef.value.scrollTop = terminalRef.value.scrollHeight
-    }
-  })
-}
-
-// 获取线索列表
-const fetchClues = async () => {
-  tableLoading.value = true
-  try {
-    const res = await clueApi.getClues()
-    clueList.value = res
-  } catch (error) {
-    ElMessage.error('获取线索失败')
-  } finally {
-    tableLoading.value = false
+// 日志变化时自动滚到底部
+watch(
+  () => radarStore.scanLogs.length,
+  () => {
+    nextTick(() => {
+      if (terminalRef.value) {
+        terminalRef.value.scrollTop = terminalRef.value.scrollHeight
+      }
+    })
   }
-}
+)
 
-// 核心：单次执行扫描逻辑
-const performScan = async () => {
-  pushLog(`[雷达扫描] 正在请求外网 API 及本地节点...`, "info")
-  try {
-    // 将字符串按逗号分割转为数组传给后端
-    const keywordsArray = scanKeyword.value ? scanKeyword.value.split(',').map(s => s.trim()) : []
-    const res = await clueApi.triggerScan(keywordsArray)
-    
-    if (res.length > 0) {
-      pushLog(`🚨 发现新线索！捕获到 ${res.length} 个可疑 CID！`, "danger")
-      await fetchClues() // 刷新表格
-    } else {
-      pushLog(`网络安静，未发现新威胁。`, "success")
-    }
-  } catch (error) {
-    pushLog("请求异常，跳过本轮扫描。", "warning")
-  }
-}
-
-// 核心：实时监控开关
-const toggleMonitor = () => {
-  if (isMonitoring.value) {
-    // 停止监控
-    isMonitoring.value = false
-    if (monitorInterval) clearInterval(monitorInterval)
-    pushLog("🔴 实时嗅探雷达已关闭。", "warning")
-  } else {
-    // 启动监控
-    isMonitoring.value = true
-    pushLog("🟢 启动实时多源嗅探雷达...", "success")
-    pushLog("监听 IPFS Swarm P2P 流量中...", "info")
-    
-    // 立即执行一次，然后每 8 秒执行一次轮询
-    performScan()
-    monitorInterval = setInterval(performScan, 8000)
-  }
-}
-
-// 核心枢纽：携参跳转到取证页面
+// 下发取证：跳转到证据页面
 const dispatchForensics = (cid: string) => {
   ElMessage.success('已下发取证任务，正在跳转...')
   router.push({ path: '/evidence', query: { target_cid: cid } })
 }
 
-// 格式化中国时间
 const formatTime = (isoString: string) => {
-  if(!isoString) return ''
+  if (!isoString) return ''
   return new Date(isoString).toLocaleString()
 }
 
-// 生命周期钩子
 onMounted(() => {
-  pushLog("系统初始化完毕。等待开启雷达...", "info")
-  fetchClues()
-})
-
-onBeforeUnmount(() => {
-  // 组件销毁时必须清除定时器，防止内存泄漏和后台无效请求
-  if (monitorInterval) clearInterval(monitorInterval)
+  // 首次进入时加载线索列表
+  if (radarStore.clueList.length === 0) {
+    radarStore.fetchClues()
+  }
+  // 如果日志为空，说明是首次进入
+  if (radarStore.scanLogs.length === 0) {
+    radarStore.pushLog('系统初始化完毕。等待开启雷达...', 'info')
+  }
 })
 </script>
 
@@ -196,7 +133,6 @@ onBeforeUnmount(() => {
 .mb-3 { margin-bottom: 15px; }
 .scan-btn { width: 100%; height: 40px; font-weight: bold; letter-spacing: 1px; }
 
-/* 黑客风终端 */
 .terminal-box {
   background-color: #1e1e1e;
   color: #a9b7c6;
