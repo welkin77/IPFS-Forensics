@@ -12,3 +12,15 @@ Pillow>=10.0.0
 pytesseract>=0.3.10
 jieba>=0.42.1
 filetype>=1.2.0  # 用于通过二进制特征准确判断文件类型
+
+# DHT嗅探
+ipfshttpclient==0.8.0a2
+
+# OSINT监控
+aiohttp>=3.9.0
+aiohttp-socks>=0.8.0
+telethon>=1.33.0
+beautifulsoup4>=4.12.0
+
+# 异常检测
+numpy>=1.24.0
