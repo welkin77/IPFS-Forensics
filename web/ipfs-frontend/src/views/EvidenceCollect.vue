@@ -10,9 +10,13 @@
       <!-- 取证表单 -->
       <el-form :model="form" label-width="120px" :inline="false">
         <el-form-item label="目标 CID" required>
-          <el-input v-model="form.cid" placeholder="请输入可疑的 IPFS CID" clearable>
-            <template #prepend>ipfs://</template>
-          </el-input>
+          <!-- ★ 改动1：CID输入框后面加网关直达 -->
+          <div style="display: flex; align-items: center; width: 100%; gap: 8px;">
+            <el-input v-model="form.cid" placeholder="请输入可疑的 IPFS CID" clearable style="flex: 1;">
+              <template #prepend>ipfs://</template>
+            </el-input>
+            <GatewayLink v-if="form.cid" :cid="form.cid" />
+          </div>
         </el-form-item>
         <el-row>
           <el-col :span="12">
@@ -66,7 +70,13 @@
         <el-row :gutter="20">
           <el-col :span="14">
             <el-card shadow="never" class="result-card">
-              <template #header><div class="card-header"><span>司法证据哈希值 (三重校验)</span></div></template>
+              <template #header>
+                <div class="card-header">
+                  <span>司法证据哈希值 (三重校验)</span>
+                  <!-- ★ 改动2：结果区标题旁加网关直达 -->
+                  <GatewayLink :cid="form.cid" />
+                </div>
+              </template>
               <el-descriptions :column="1" border>
                 <el-descriptions-item label="文件大小 (Bytes)">
                   <el-tag type="info">{{ result.report_data.evidence_summary.file_size_bytes }}</el-tag>
@@ -143,6 +153,7 @@ import { ElMessage } from 'element-plus'
 import { Search, DocumentChecked } from '@element-plus/icons-vue' 
 import { evidenceApi, type CollectParams } from '../api/index'
 import ForensicReport from '../components/ForensicReport.vue'
+import GatewayLink from '../components/GatewayLink.vue'  // ★ 改动3：导入组件
 
 const route = useRoute()
 const loading = ref(false)
@@ -165,7 +176,6 @@ const pushLog = (text: string, type = 'info') => {
   const now = new Date()
   const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}.${String(now.getMilliseconds()).padStart(3,'0')}`
   executionLogs.value.push({ time: timeStr, text, type })
-  // 自动滚动到底部
   nextTick(() => {
     if (terminalRef.value) {
       terminalRef.value.scrollTop = terminalRef.value.scrollHeight
@@ -219,14 +229,12 @@ const submitTask = async () => {
     return
   }
   
-  // 重置状态
   loading.value = true
   result.value = null 
   showTerminal.value = true
   executionLogs.value = []
   clearTimers()
   
-  // 开始模拟前期侦察与网络连接的日志（制造紧张感）
   pushLog(`[1/5] 初始化取证沙箱，案件流水号分配: ${form.case_id}`, 'info')
   timers.push(setTimeout(() => pushLog(`锁定目标 CID: ${form.cid}`, 'warning'), 600))
   timers.push(setTimeout(() => pushLog('启动 GatewayMonitor，加载防阻断网关代理配置...', 'info'), 1200))
@@ -234,17 +242,12 @@ const submitTask = async () => {
   timers.push(setTimeout(() => pushLog('正在尝试建立数据传输隧道 (Downloading)...', 'warning'), 3500))
 
   try {
-    // 真实发起后端请求，等待后端真正完成抓取、哈希、OCR
     const res = await evidenceApi.collect(form)
-    
-    // 如果后端成功返回，清除还没执行的虚拟延迟
     clearTimers()
     
-    // 快速追加真实的完成日志
     pushLog(`[2/5] 物理文件拉取成功！开始流式计算三重哈希...`, 'success')
     pushLog(`SHA-256 / SHA-512 / Keccak-256 校验完毕。`, 'info')
     
-    // 模拟 OCR 判定延迟感
     timers.push(setTimeout(() => pushLog(`[3/5] 触发 ContentAnalyzer，识别多媒体文件特征...`, 'info'), 500))
     
     const isIllegal = res.report_data.analysis_results.is_illegal
@@ -257,7 +260,6 @@ const submitTask = async () => {
     timers.push(setTimeout(() => pushLog(`[4/5] 封装 Merkle Tree 证据块，记录监管链 (Chain of Custody)...`, 'warning'), 1800))
     timers.push(setTimeout(() => pushLog(`[5/5] 数据持久化入库完成！生成最终司法文书。`, 'success'), 2500))
 
-    // 日志展示完毕后，再渲染 A4 报告，营造极佳的仪式感
     timers.push(setTimeout(() => {
       result.value = res
       loading.value = false
@@ -278,7 +280,7 @@ const formatTime = (isoString: string) => {
 
 <style scoped>
 .evidence-container { display: flex; flex-direction: column; gap: 20px; }
-.card-header { font-weight: bold; font-size: 16px; }
+.card-header { font-weight: bold; font-size: 16px; display: flex; align-items: center; justify-content: space-between; }
 
 /* 模拟 Mac 风格控制台 */
 .terminal-card {

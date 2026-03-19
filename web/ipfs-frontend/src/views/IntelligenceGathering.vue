@@ -2,7 +2,7 @@
   <div class="gather-container">
     <el-row :gutter="20">
       
-      <!-- 左侧：控制台与扫描雷达 -->
+      <!-- 左侧：控制台与扫描雷达 - 完全不变 -->
       <el-col :span="8">
         <el-card shadow="hover" class="control-card">
           <template #header><div class="card-header"><span>多源嗅探控制台</span></div></template>
@@ -37,7 +37,7 @@
         </el-card>
       </el-col>
 
-      <!-- 右侧：发现的线索池 -->
+      <!-- 右侧：线索池 -->
       <el-col :span="16">
         <el-card shadow="never" class="table-card">
           <template #header>
@@ -66,9 +66,11 @@
               </template>
             </el-table-column>
 
-            <el-table-column label="操作" width="120" fixed="right" align="center">
+            <!-- ★ 改动：操作列加宽，加入网关直达按钮 -->
+            <el-table-column label="操作" width="200" fixed="right" align="center">
               <template #default="scope">
-                <el-button type="warning" size="small" icon="Promotion" @click="dispatchForensics(scope.row.cid)">
+                <GatewayLink :cid="scope.row.cid" />
+                <el-button type="warning" size="small" icon="Promotion" @click="dispatchForensics(scope.row.cid)" style="margin-left: 6px;">
                   下发取证
                 </el-button>
               </template>
@@ -86,13 +88,13 @@ import { ref, onMounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useRadarStore } from '../stores/radar'
+import GatewayLink from '../components/GatewayLink.vue'  // ★ 新增
 
 const radarStore = useRadarStore()
 const router = useRouter()
 const sources = ref({ dht: true, tg: true, dark: true })
 const terminalRef = ref<HTMLElement | null>(null)
 
-// 日志变化时自动滚到底部
 watch(
   () => radarStore.scanLogs.length,
   () => {
@@ -104,7 +106,6 @@ watch(
   }
 )
 
-// 下发取证：跳转到证据页面
 const dispatchForensics = (cid: string) => {
   ElMessage.success('已下发取证任务，正在跳转...')
   router.push({ path: '/evidence', query: { target_cid: cid } })
@@ -116,11 +117,9 @@ const formatTime = (isoString: string) => {
 }
 
 onMounted(() => {
-  // 首次进入时加载线索列表
   if (radarStore.clueList.length === 0) {
     radarStore.fetchClues()
   }
-  // 如果日志为空，说明是首次进入
   if (radarStore.scanLogs.length === 0) {
     radarStore.pushLog('系统初始化完毕。等待开启雷达...', 'info')
   }

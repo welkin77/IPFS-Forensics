@@ -1,89 +1,193 @@
-import requests
-import urllib3
-from typing import Optional, List
-from utils.logger import setup_logger
+"""
+改进后的网关监控模块
+核心改动：
+1. 并发请求多个网关（asyncio.gather）
+2. 引入熔断器，跳过不可用的网关
+3. 先HEAD请求检查大小，再GET下载
+"""
 
-# 禁用 urllib3 的 InsecureRequestWarning 警告 (对应日志里的刷屏报错)
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+import asyncio
+import logging
+import time
+from typing import Optional, Tuple
 
-logger = setup_logger(__name__)
+import aiohttp
+
+from utils.error_handler import CircuitBreaker, GatewayError
+
+logger = logging.getLogger(__name__)
+
 
 class GatewayMonitor:
-    """公共/本地网关监控与司法级下载模块"""
-    
-    def __init__(self):
-        self.gateways: List[str] = [
-            'http://127.0.0.1:8080/ipfs/',      # 首选：IPFS Desktop 提供的本地极速网关
-            'https://dweb.link/ipfs/',          # 备选1：Protocol Labs 官方优化的网关
-            'https://ipfs.io/ipfs/',            # 备选2：官方基础网关
-            'https://gateway.pinata.cloud/ipfs/'# 备选3：Pinata
-        ]
-        
-        # P2P 网络寻址非常慢，将超时时间放宽至 60 秒
-        self.timeout: int = 60
-        
-        # 证据保全限制：对于超大文件，只下载前 50MB 用于哈希计算和内容审查
-        # (突破毕设限制的实战设计：防止取证服务器被 100GB 的恶意 CID 挤爆内存)
-        self.max_file_size = 50 * 1024 * 1024 
+    """改进后的IPFS网关监控"""
 
-        # 如果你在国内，公共网关需要代理。请根据你的 Clash/V2ray 端口修改
-        # 这种写法比 os.environ 更加安全，不会污染全局环境
-        self.proxy_url = "http://127.0.0.1:7890" 
-        self.proxies = {
-            "http": self.proxy_url,
-            "https": self.proxy_url
+    DEFAULT_GATEWAYS = [
+        {'name': 'local', 'url': 'http://127.0.0.1:8080/ipfs/', 'needs_proxy': False},
+        {'name': 'ipfs.io', 'url': 'https://ipfs.io/ipfs/', 'needs_proxy': True},
+        {'name': 'cloudflare', 'url': 'https://cloudflare-ipfs.com/ipfs/', 'needs_proxy': True},
+        {'name': 'dweb', 'url': 'https://dweb.link/ipfs/', 'needs_proxy': True},
+        {'name': 'pinata', 'url': 'https://gateway.pinata.cloud/ipfs/', 'needs_proxy': True},
+    ]
+
+    def __init__(
+        self,
+        gateways: list = None,
+        max_file_size: int = 50 * 1024 * 1024,  # 50MB
+        timeout: int = 30,
+        proxy: str = None  # 'http://127.0.0.1:7890'
+    ):
+        self.gateways = gateways or self.DEFAULT_GATEWAYS
+        self.max_file_size = max_file_size
+        self.timeout = timeout
+        self.proxy = proxy
+
+        # 每个网关一个熔断器
+        self._breakers = {
+            gw['name']: CircuitBreaker(
+                name=gw['name'],
+                failure_threshold=3,
+                recovery_timeout=120
+            )
+            for gw in self.gateways
         }
 
-    def fetch_cid_content(self, cid: str) -> Optional[bytes]:
-        """流式下载 CID 内容，带有大小限制和智能代理"""
-        
-        for gateway in self.gateways:
-            url = f"{gateway}{cid}"
-            
-            # 智能判断：如果是本地网关，绝不走代理；如果是公共网关，则挂载代理
-            use_proxy = None if "127.0.0.1" in gateway or "localhost" in gateway else self.proxies
+        # 统计
+        self._stats = {gw['name']: {'success': 0, 'fail': 0, 'avg_ms': 0} for gw in self.gateways}
 
+    async def fetch_cid_content(self, cid: str) -> Optional[bytes]:
+        """
+        并发从多个网关获取CID内容，返回最快成功的结果
+        """
+        # 过滤出未熔断的网关
+        available = [
+            gw for gw in self.gateways
+            if self._breakers[gw['name']].can_proceed()
+        ]
+
+        if not available:
+            logger.error("所有网关均已熔断，无法获取内容")
+            raise GatewayError("所有网关不可用", gateway="all")
+
+        # 并发请求
+        tasks = [
+            self._fetch_from_gateway(gw, cid)
+            for gw in available
+        ]
+
+        # 用 asyncio.gather 并发，返回第一个成功的
+        done, pending = await asyncio.wait(
+            [asyncio.create_task(t) for t in tasks],
+            return_when=asyncio.FIRST_COMPLETED
+        )
+
+        # 取消剩余任务
+        for task in pending:
+            task.cancel()
+
+        # 检查结果
+        for task in done:
             try:
-                logger.info(f"正在尝试从网关获取数据: {url}")
-                
-                # 开启 stream=True 进行流式下载，避免内存爆炸
-                response = requests.get(
-                    url, 
-                    timeout=self.timeout, 
-                    verify=False, 
-                    proxies=use_proxy,
-                    stream=True 
-                )
-                
-                if response.status_code == 200:
-                    content_bytes = bytearray()
-                    downloaded_size = 0
-                    
-                    # 以 128KB 为一个块进行读取
-                    for chunk in response.iter_content(chunk_size=128 * 1024):
-                        if chunk:
-                            content_bytes.extend(chunk)
-                            downloaded_size += len(chunk)
-                            
-                            # 触发司法熔断：文件过大，截断下载
-                            if downloaded_size >= self.max_file_size:
-                                logger.warning(f"CID {cid} 体积过大，已触发司法截断 (仅保留前 {self.max_file_size/1024/1024}MB)")
-                                break
-                                
-                    logger.info(f"成功从 {gateway} 获取 CID: {cid} 的内容 (大小: {downloaded_size} 字节)")
-                    return bytes(content_bytes)
-                    
-                elif response.status_code == 504:
-                    logger.warning(f"网关 {gateway} 寻址超时 (504)，该 CID 可能处于冷门状态或死链。")
-                else:
-                    logger.warning(f"网关 {gateway} 响应异常，状态码: {response.status_code}")
-                    
-            except requests.exceptions.ReadTimeout:
-                logger.warning(f"网关 {gateway} 请求超时 (>{self.timeout}s)，跳过。")
-            except requests.exceptions.ProxyError:
-                logger.error(f"网关 {gateway} 代理连接失败，请检查 {self.proxy_url} 是否正常运行！")
-            except requests.exceptions.RequestException as e:
-                logger.error(f"网关 {gateway} 请求异常: {type(e).__name__}")
-                
-        logger.error(f"证据固定失败：无法从任何已知网关获取 CID [{cid}] 的内容。该节点可能已下线。")
+                result = task.result()
+                if result is not None:
+                    return result
+            except Exception:
+                continue
+
+        # 如果第一批没成功，等待其余
+        if pending:
+            done2, _ = await asyncio.wait(pending, return_when=asyncio.ALL_COMPLETED)
+            for task in done2:
+                try:
+                    result = task.result()
+                    if result is not None:
+                        return result
+                except Exception:
+                    continue
+
+        logger.warning(f"所有网关均无法获取CID: {cid}")
         return None
+
+    async def _fetch_from_gateway(
+        self, gw: dict, cid: str
+    ) -> Optional[bytes]:
+        """从单个网关获取内容"""
+        name = gw['name']
+        url = f"{gw['url']}{cid}"
+        proxy = self.proxy if gw.get('needs_proxy') else None
+        breaker = self._breakers[name]
+
+        start = time.time()
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                # 1. HEAD请求检查大小
+                async with session.head(
+                    url,
+                    timeout=aiohttp.ClientTimeout(total=10),
+                    proxy=proxy,
+                    ssl=False
+                ) as head_resp:
+                    if head_resp.status != 200:
+                        raise GatewayError(
+                            f"HEAD {head_resp.status}",
+                            gateway=name
+                        )
+                    
+                    content_length = int(
+                        head_resp.headers.get('Content-Length', 0)
+                    )
+                    if content_length > self.max_file_size:
+                        logger.warning(
+                            f"[{name}] 文件过大: "
+                            f"{content_length / 1024 / 1024:.1f}MB > "
+                            f"{self.max_file_size / 1024 / 1024:.0f}MB"
+                        )
+                        return None
+
+                # 2. GET下载内容
+                async with session.get(
+                    url,
+                    timeout=aiohttp.ClientTimeout(total=self.timeout),
+                    proxy=proxy,
+                    ssl=False
+                ) as resp:
+                    if resp.status != 200:
+                        raise GatewayError(
+                            f"GET {resp.status}",
+                            gateway=name
+                        )
+                    
+                    content = await resp.read()
+
+            elapsed = (time.time() - start) * 1000
+            breaker.record_success()
+
+            # 更新统计
+            s = self._stats[name]
+            s['success'] += 1
+            s['avg_ms'] = (s['avg_ms'] * (s['success'] - 1) + elapsed) / s['success']
+
+            logger.info(
+                f"[{name}] 成功获取 {cid[:16]}... "
+                f"大小={len(content)} 耗时={elapsed:.0f}ms"
+            )
+            return content
+
+        except Exception as e:
+            elapsed = (time.time() - start) * 1000
+            breaker.record_failure(e)
+            self._stats[name]['fail'] += 1
+            logger.debug(f"[{name}] 获取失败: {e}")
+            return None
+
+    def get_gateway_status(self) -> list:
+        """获取所有网关状态"""
+        return [
+            {
+                'name': gw['name'],
+                'url': gw['url'],
+                'breaker': self._breakers[gw['name']].get_status(),
+                'stats': self._stats[gw['name']]
+            }
+            for gw in self.gateways
+        ]
