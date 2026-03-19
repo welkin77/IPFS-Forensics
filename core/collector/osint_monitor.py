@@ -2,7 +2,7 @@
 公开信源监控模块 (OSINT Monitor)
 位置: core/collector/osint_monitor.py
 
-功能：监控Telegram、Twitter/X、Reddit、暗网论坛中分享的IPFS链接
+功能：监控Telegram、Reddit、暗网论坛中分享的IPFS链接
 与现有 core/collector/ 下的网关监控模块并列
 """
 
@@ -27,7 +27,6 @@ logger = logging.getLogger(__name__)
 
 class SourcePlatform(Enum):
     TELEGRAM = "telegram"
-    TWITTER = "twitter"
     REDDIT = "reddit"
     DARKWEB = "darkweb"
     UNKNOWN = "unknown"
@@ -208,7 +207,7 @@ class TelegramMonitor(BaseMonitor):
 
         self._is_running = True
 
-        proxy_config = None
+        proxy_config = None # Telegram代理设置
         if self.proxy:
             proxy_config = (
                 self.proxy.get('type', 'socks5'),
@@ -323,145 +322,6 @@ class TelegramMonitor(BaseMonitor):
                 self._stats['errors'] += 1
                 logger.error(f"扫描频道 {channel} 失败: {e}")
         self._stats['last_scan_time'] = datetime.utcnow().isoformat()
-
-
-# ==================== Twitter/X 监控 ====================
-
-class TwitterMonitor(BaseMonitor):
-    """
-    Twitter/X 监控
-
-    需要: Twitter Developer Bearer Token
-    """
-
-    TWITTER_API_BASE = "https://api.twitter.com/2"
-
-    def __init__(
-        self,
-        bearer_token: str,
-        search_queries: List[str] = None,
-        poll_interval: int = 60
-    ):
-        super().__init__()
-        self.bearer_token = bearer_token
-        self.search_queries = search_queries or [
-            'ipfs.io/ipfs/', '#IPFS CID', 'bafybei',
-            'cloudflare-ipfs.com', 'dweb.link/ipfs'
-        ]
-        self.poll_interval = poll_interval
-        self._session: Optional[aiohttp.ClientSession] = None
-        self._last_tweet_ids: Dict[str, str] = {}
-
-    async def start(self):
-        self._is_running = True
-        self._session = aiohttp.ClientSession(
-            headers={
-                'Authorization': f'Bearer {self.bearer_token}',
-                'Content-Type': 'application/json'
-            }
-        )
-        logger.info(f"Twitter监控已启动，{len(self.search_queries)} 个查询")
-
-        try:
-            while self._is_running:
-                await self._poll_tweets()
-                await asyncio.sleep(self.poll_interval)
-        except asyncio.CancelledError:
-            pass
-        finally:
-            if self._session:
-                await self._session.close()
-
-    async def stop(self):
-        self._is_running = False
-        if self._session:
-            await self._session.close()
-
-    async def _poll_tweets(self):
-        for query in self.search_queries:
-            if not self._is_running:
-                break
-            try:
-                params = {
-                    'query': query,
-                    'max_results': 100,
-                    'tweet.fields': 'created_at,author_id,text',
-                    'expansions': 'author_id',
-                    'user.fields': 'username,name'
-                }
-                last_id = self._last_tweet_ids.get(query)
-                if last_id:
-                    params['since_id'] = last_id
-
-                async with self._session.get(
-                    f"{self.TWITTER_API_BASE}/tweets/search/recent",
-                    params=params,
-                    timeout=aiohttp.ClientTimeout(total=30)
-                ) as response:
-                    if response.status == 429:
-                        retry_after = int(
-                            response.headers.get('retry-after', 60)
-                        )
-                        logger.warning(f"Twitter限流，等待 {retry_after}s")
-                        await asyncio.sleep(retry_after)
-                        continue
-                    if response.status != 200:
-                        logger.error(f"Twitter API错误: {response.status}")
-                        continue
-                    data = await response.json()
-
-                tweets = data.get('data', [])
-                users_map = {}
-                for user in data.get('includes', {}).get('users', []):
-                    users_map[user['id']] = user
-
-                for tweet in tweets:
-                    self._stats['messages_scanned'] += 1
-                    text = tweet.get('text', '')
-                    cids = CIDExtractor.extract_cids(text)
-                    if not cids:
-                        continue
-
-                    author_id = tweet.get('author_id', 'unknown')
-                    author = users_map.get(author_id, {})
-                    username = author.get('username', 'unknown')
-
-                    for cid in cids:
-                        mention = CIDMention(
-                            cid=cid,
-                            platform=SourcePlatform.TWITTER,
-                            source_url=f"https://twitter.com/{username}/status/{tweet['id']}",
-                            author_id=author_id,
-                            author_name=username,
-                            message_text=text,
-                            timestamp=datetime.fromisoformat(
-                                tweet['created_at'].replace('Z', '+00:00')
-                            ),
-                            context={
-                                'tweet_id': tweet['id'],
-                                'query': query,
-                            },
-                            risk_score=CIDExtractor.calculate_risk_score(text)
-                        )
-                        self._record_mention(mention)
-                        await self._notify_callbacks(mention)
-                        logger.info(
-                            f"[Twitter] CID: {cid[:20]}... from @{username}"
-                        )
-
-                if tweets:
-                    self._last_tweet_ids[query] = tweets[0]['id']
-
-            except aiohttp.ClientError as e:
-                self._stats['errors'] += 1
-                logger.error(f"Twitter请求失败: {e}")
-            except Exception as e:
-                self._stats['errors'] += 1
-                logger.error(f"Twitter监控错误: {e}", exc_info=True)
-
-            await asyncio.sleep(3)  # 查询间隔
-        self._stats['last_scan_time'] = datetime.utcnow().isoformat()
-
 
 # ==================== Reddit 监控 ====================
 

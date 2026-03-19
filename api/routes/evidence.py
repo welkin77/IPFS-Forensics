@@ -9,16 +9,15 @@ from core.evidence.custody import ChainOfCustody
 from core.report.generator import EvidenceReportGenerator
 from utils.logger import setup_logger
 from core.analysis.content_analyzer import ContentAnalyzer
-from fastapi import APIRouter, HTTPException, Depends # 新增 Depends
-from sqlalchemy.orm import Session # 新增
-
-
-# 新增导入数据库相关的模块
+from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy.orm import Session
 from core.db.database import get_db, engine, Base
 from core.db.models import EvidenceRecord
-
 from typing import List
 from api.schemas import EvidenceRecordResponse
+from core.evidence.timestamp import stamp_evidence
+from fastapi.responses import FileResponse
+from core.report.pdf_generator import PDFReportGenerator
 
 # 系统启动时，自动创建数据库表结构（如果表不存在）
 Base.metadata.create_all(bind=engine)
@@ -73,15 +72,22 @@ async def collect_and_fixate(request: CollectRequest, db: Session = Depends(get_
         "sha256": evidence.hashes['sha256'],
         "merkle_root": merkle_proof['merkle_root']
     })
-
-    # 5. 生成报告
+    # 5. 申请可信时间戳
+    investigator_id = 0
+    timestamp_result = stamp_evidence(evidence.hashes['sha256'])
+    custody.add_record("可信时间戳", investigator_id, {
+    "tsa_server": timestamp_result.get('tsa_server'),
+    "success": timestamp_result.get('success'),
+    "request_time": timestamp_result.get('request_time')
+    })
+    # 6. 生成报告
     case_info = {
         "case_id": request.case_id,
         "case_name": "API触发的取证任务",
         "generation_time": evidence.timestamp
     }
     report_gen = EvidenceReportGenerator(case_info)
-    
+    report_data['timestamp'] = timestamp_result # 将时间戳信息加入报告数据
     # 使用 UUID 避免文件名冲突
     report_filename = f"report_{request.case_id}_{uuid.uuid4().hex[:8]}.json"
     report_path = os.path.join(REPORTS_DIR, report_filename)
@@ -139,3 +145,21 @@ def get_evidence_history(db: Session = Depends(get_db)):
     """
     records = db.query(EvidenceRecord).order_by(EvidenceRecord.created_at.desc()).limit(100).all()
     return records
+
+pdf_gen = PDFReportGenerator()
+
+@router.post("/export-pdf")
+async def export_pdf(request: dict):
+    """导出PDF取证报告"""
+    report_data = request.get('report_data', {})
+    case_id = request.get('case_id', '')
+    
+    try:
+        filepath = pdf_gen.generate(report_data, case_id)
+        return FileResponse(
+            filepath,
+            media_type='application/pdf',
+            filename=os.path.basename(filepath)
+        )
+    except Exception as e:
+        return {"error": True, "message": str(e)}

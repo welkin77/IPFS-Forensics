@@ -5,8 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.routes import evidence, analysis, clues
 from core.collector.dht_probe import DHTProbe
 from core.collector.osint_monitor import (
-    OSINTManager, RedditMonitor, TelegramMonitor,
-    TwitterMonitor, DarkwebMonitor
+    OSINTManager, RedditMonitor, TelegramMonitor, DarkwebMonitor
 )
 from core.analysis.anomaly_detector import AnomalyDetector
 from utils.error_handler import (
