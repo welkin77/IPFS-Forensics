@@ -133,6 +133,9 @@
         </el-row>
 
         <!-- 分割线与报告 -->
+        <el-button type="primary" icon="Download" @click="exportPdf">
+          导出 PDF 取证报告
+        </el-button>
         <el-divider content-position="center" style="margin: 40px 0;">
           <el-icon size="18" style="vertical-align: middle; margin-right: 5px;"><DocumentChecked /></el-icon>
           <span style="font-size: 18px; font-weight: bold; color: #606266;">法定电子数据取证报告</span>
@@ -275,6 +278,26 @@ const submitTask = async () => {
 
 const formatTime = (isoString: string) => {
   return new Date(isoString).toLocaleString()
+}
+
+const exportPdf = async () => {
+  if (!result.value) return
+  try {
+    const res = await axios.post(
+      'http://localhost:8000/api/v1/evidence/export-pdf',
+      { report_data: result.value.report_data, case_id: form.case_id },
+      { responseType: 'blob' }
+    )
+    const url = window.URL.createObjectURL(new Blob([res.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `取证报告_${form.case_id}.pdf`
+    link.click()
+    window.URL.revokeObjectURL(url)
+    ElMessage.success('PDF报告已下载')
+  } catch {
+    ElMessage.error('PDF导出失败')
+  }
 }
 </script>
 
