@@ -1,43 +1,313 @@
+/* ==================== 公安取证系统主题 ==================== */
+
+:root {
+    --police-blue: #003366;
+    --police-blue-light: #004080;
+    --police-blue-dark: #002244;
+    --badge-gold: #C5A55A;
+    --badge-gold-light: #D4B86A;
+    --alert-red: #CC0000;
+    --shield-green: #2E8B57;
+    --bg-gray: #F0F2F5;
+    --bg-dark: #0A1628;
+    --text-primary: #1A1A2E;
+    --text-secondary: #6C757D;
+    --border-color: #DEE2E6;
+}
+
+/* 导航栏 */
+.navbar {
+    background: linear-gradient(135deg, var(--police-blue-dark), var(--police-blue)) !important;
+    border-bottom: 3px solid var(--badge-gold);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.3rem;
+    letter-spacing: 1px;
+    color: var(--badge-gold) !important;
+}
+
+.navbar-brand i {
+    color: var(--badge-gold);
+}
+
+.nav-link {
+    color: rgba(255, 255, 255, 0.85) !important;
+    font-weight: 500;
+    padding: 0.5rem 1rem !important;
+    border-radius: 4px;
+    margin: 0 2px;
+    transition: all 0.2s;
+}
+
+.nav-link:hover, .nav-link.active {
+    color: #fff !important;
+    background: rgba(197, 165, 90, 0.2);
+}
+
+.navbar-text {
+    color: var(--badge-gold-light) !important;
+    font-size: 0.9rem;
+}
+
+/* 统计卡片 */
+.stat-card {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s, box-shadow 0.2s;
+    overflow: hidden;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.stat-card .card-body {
+    padding: 1.25rem;
+}
+
+.stat-card.bg-police {
+    background: linear-gradient(135deg, var(--police-blue), var(--police-blue-light));
+    color: #fff;
+}
+
+.stat-card.bg-gold {
+    background: linear-gradient(135deg, #8B6914, var(--badge-gold));
+    color: #fff;
+}
+
+.stat-card.bg-danger-custom {
+    background: linear-gradient(135deg, #8B0000, var(--alert-red));
+    color: #fff;
+}
+
+.stat-card.bg-shield {
+    background: linear-gradient(135deg, #1B5E20, var(--shield-green));
+    color: #fff;
+}
+
+/* 卡片通用 */
+.card {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.card-header {
+    background: linear-gradient(to right, var(--police-blue), var(--police-blue-light));
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 0.75rem 1rem;
+    border-bottom: 2px solid var(--badge-gold);
+}
+
+.card-header .btn {
+    border-color: var(--badge-gold);
+    color: var(--badge-gold);
+}
+
+.card-header .btn:hover {
+    background: var(--badge-gold);
+    color: var(--police-blue-dark);
+}
+
+/* 表格 */
+.table thead th {
+    background: var(--police-blue);
+    color: #fff;
+    font-weight: 600;
+    font-size: 13px;
+    border: none;
+    padding: 0.6rem 0.75rem;
+}
+
+.table tbody tr:hover {
+    background: rgba(0, 51, 102, 0.04);
+}
+
 /* 终端样式 */
 .terminal-box {
-    background-color: #1e1e1e;
-    color: #a9b7c6;
+    background: var(--bg-dark);
+    color: #8892B0;
     font-family: 'Consolas', 'Courier New', monospace;
     font-size: 13px;
     padding: 12px;
-    height: 280px;
+    height: 300px;
     overflow-y: auto;
     line-height: 1.6;
+    border: 1px solid rgba(197, 165, 90, 0.3);
+    border-radius: 0 0 6px 6px;
 }
 
-.terminal-box .log-info { color: #4CAF50; margin-bottom: 2px; }
-.terminal-box .log-warning { color: #FFC107; margin-bottom: 2px; }
-.terminal-box .log-danger { color: #ff5f56; font-weight: bold; margin-bottom: 2px; }
-.terminal-box .log-success { color: #00BCD4; margin-bottom: 2px; }
+.terminal-box .log-info { color: var(--shield-green); margin-bottom: 2px; }
+.terminal-box .log-warning { color: var(--badge-gold); margin-bottom: 2px; }
+.terminal-box .log-danger { color: var(--alert-red); font-weight: bold; margin-bottom: 2px; }
+.terminal-box .log-success { color: #64FFDA; margin-bottom: 2px; }
 
-/* Mac风格圆点 */
+/* Mac风格终端头 */
+.terminal-header {
+    background: #1A2332;
+    padding: 8px 15px;
+    display: flex;
+    align-items: center;
+    border-radius: 6px 6px 0 0;
+    border: 1px solid rgba(197, 165, 90, 0.3);
+    border-bottom: none;
+}
+
 .dot-red, .dot-yellow, .dot-green {
     display: inline-block;
     width: 10px;
     height: 10px;
     border-radius: 50%;
+    margin-right: 6px;
 }
 .dot-red { background: #ff5f56; }
 .dot-yellow { background: #ffbd2e; }
 .dot-green { background: #27c93f; }
 
+.terminal-header .title-text {
+    color: var(--badge-gold-light);
+    font-size: 12px;
+    margin-left: 10px;
+    font-family: monospace;
+    letter-spacing: 0.5px;
+}
+
+/* 按钮 */
+.btn-police {
+    background: linear-gradient(135deg, var(--police-blue), var(--police-blue-light));
+    color: #fff;
+    border: none;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.btn-police:hover {
+    background: linear-gradient(135deg, var(--police-blue-light), #0055AA);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(0, 51, 102, 0.3);
+}
+
+.btn-gold {
+    background: linear-gradient(135deg, #8B6914, var(--badge-gold));
+    color: #fff;
+    border: none;
+    font-weight: 600;
+}
+
+.btn-gold:hover {
+    background: linear-gradient(135deg, var(--badge-gold), var(--badge-gold-light));
+    color: var(--police-blue-dark);
+}
+
+/* Badge标签 */
+.badge-police { background: var(--police-blue); }
+.badge-gold { background: var(--badge-gold); color: var(--police-blue-dark); }
+.badge-danger-custom { background: var(--alert-red); }
+.badge-shield { background: var(--shield-green); }
+
+/* 引擎状态面板 */
+.engine-status-panel {
+    background: linear-gradient(to bottom, #F8F9FA, #EEF0F2);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 13px;
+}
+
+.engine-status-panel .status-label {
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.engine-status-panel .status-value {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: 'Consolas', monospace;
+}
+
 /* HTMX加载指示器 */
 .htmx-indicator { display: none; }
 .htmx-request .htmx-indicator { display: inline-block; }
-
-/* 卡片统一间距 */
-.card-header {
-    font-weight: 600;
-    font-size: 14px;
-}
 
 /* 代码字体 */
 code {
     font-family: 'Consolas', monospace;
     font-size: 12px;
+    color: var(--police-blue);
+}
+
+/* 全局背景 */
+body {
+    background: var(--bg-gray);
+}
+
+main {
+    padding-bottom: 3rem;
+}
+
+/* 页面标题区 */
+.page-header {
+    background: linear-gradient(135deg, var(--police-blue-dark), var(--police-blue));
+    color: #fff;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid var(--badge-gold);
+}
+
+.page-header h4 {
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.page-header p {
+    margin: 0.5rem 0 0 0;
+    opacity: 0.8;
+    font-size: 13px;
+}
+
+/* 证据结果区 */
+.evidence-hash-table td {
+    font-size: 13px;
+    padding: 0.5rem 0.75rem;
+}
+
+.evidence-hash-table code {
+    word-break: break-all;
+    font-size: 11px;
+}
+
+/* 监管链时间线 */
+.custody-item {
+    display: flex;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #EEE;
+}
+
+.custody-item:last-child {
+    border-bottom: none;
+}
+
+.custody-icon {
+    margin-right: 0.75rem;
+    color: var(--police-blue);
+}
+
+.custody-icon.final {
+    color: var(--shield-green);
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+    .navbar-brand { font-size: 1rem; }
+    .terminal-box { height: 200px; }
 }

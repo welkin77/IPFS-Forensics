@@ -2,56 +2,125 @@
 {% block title %}仪表盘{% endblock %}
 
 {% block content %}
+<!-- 页面标题区 -->
+<div class="page-header">
+    <h4><i class="bi bi-speedometer2 me-2"></i>系统仪表盘</h4>
+    <p>基于IF-DSS框架 · 覆盖Node/Peer/Gateway/Internet四区域 · 实时态势感知</p>
+</div>
+
 <!-- 统计卡片 -->
 <div class="row g-3 mb-4">
     <div class="col-md-3">
-        <div class="card text-white bg-primary h-100">
+        <div class="card stat-card bg-police h-100">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
+                <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="card-title">线索总量</h6>
-                        <h2>{{ clue_count }}</h2>
+                        <div class="text-uppercase small opacity-75" style="font-size:11px;letter-spacing:1px;">线索总量</div>
+                        <h2 class="mb-0 mt-1">{{ clue_count }}</h2>
                     </div>
-                    <i class="bi bi-search display-4 opacity-50"></i>
+                    <i class="bi bi-search display-4 opacity-25"></i>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card text-white bg-success h-100">
+        <div class="card stat-card bg-shield h-100">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
+                <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="card-title">已取证</h6>
-                        <h2>{{ evidence_count }}</h2>
+                        <div class="text-uppercase small opacity-75" style="font-size:11px;letter-spacing:1px;">已取证固定</div>
+                        <h2 class="mb-0 mt-1">{{ evidence_count }}</h2>
                     </div>
-                    <i class="bi bi-file-earmark-check display-4 opacity-50"></i>
+                    <i class="bi bi-file-earmark-check display-4 opacity-25"></i>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card text-white bg-danger h-100">
+        <div class="card stat-card bg-danger-custom h-100">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
+                <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="card-title">涉嫌违法</h6>
-                        <h2>{{ illegal_count }}</h2>
+                        <div class="text-uppercase small opacity-75" style="font-size:11px;letter-spacing:1px;">涉嫌违法</div>
+                        <h2 class="mb-0 mt-1">{{ illegal_count }}</h2>
                     </div>
-                    <i class="bi bi-exclamation-triangle display-4 opacity-50"></i>
+                    <i class="bi bi-exclamation-triangle display-4 opacity-25"></i>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card text-white bg-info h-100">
+        <div class="card stat-card bg-gold h-100">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
+                <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="card-title">IPFS节点</h6>
-                        <h2>{{ scanner_status.connected_peers }}</h2>
+                        <div class="text-uppercase small opacity-75" style="font-size:11px;letter-spacing:1px;">IPFS对等节点</div>
+                        <h2 class="mb-0 mt-1">{{ scanner_status.connected_peers }}</h2>
                     </div>
-                    <i class="bi bi-hdd-network display-4 opacity-50"></i>
+                    <i class="bi bi-hdd-network display-4 opacity-25"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- IF-DSS 四区域覆盖状态 -->
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-grid-3x3-gap me-1"></i>IF-DSS 四区域取证覆盖态势
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="p-3 rounded" style="background:rgba(0,51,102,0.05);border:1px solid rgba(0,51,102,0.15);">
+                            <i class="bi bi-hdd-stack display-6" style="color:var(--police-blue);"></i>
+                            <h6 class="mt-2 mb-1">Node 区域</h6>
+                            <small class="text-muted">本地节点存储/配置</small>
+                            <div class="mt-2">
+                                {% if scanner_status.ipfs_node_available %}
+                                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>在线</span>
+                                {% else %}
+                                <span class="badge bg-secondary"><i class="bi bi-x-circle me-1"></i>离线</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3 rounded" style="background:rgba(0,51,102,0.05);border:1px solid rgba(0,51,102,0.15);">
+                            <i class="bi bi-diagram-3 display-6" style="color:var(--police-blue);"></i>
+                            <h6 class="mt-2 mb-1">Peer 区域</h6>
+                            <small class="text-muted">DHT/Bitswap P2P网络</small>
+                            <div class="mt-2">
+                                {% if scanner_status.connected_peers > 0 %}
+                                <span class="badge bg-success">{{ scanner_status.connected_peers }} 节点</span>
+                                {% else %}
+                                <span class="badge bg-secondary">未连接</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3 rounded" style="background:rgba(0,51,102,0.05);border:1px solid rgba(0,51,102,0.15);">
+                            <i class="bi bi-globe display-6" style="color:var(--police-blue);"></i>
+                            <h6 class="mt-2 mb-1">Gateway 区域</h6>
+                            <small class="text-muted">公共网关/API服务</small>
+                            <div class="mt-2">
+                                <span class="badge bg-success">6 网关就绪</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3 rounded" style="background:rgba(0,51,102,0.05);border:1px solid rgba(0,51,102,0.15);">
+                            <i class="bi bi-chat-dots display-6" style="color:var(--police-blue);"></i>
+                            <h6 class="mt-2 mb-1">Internet 区域</h6>
+                            <small class="text-muted">论坛/Reddit/公开信源</small>
+                            <div class="mt-2">
+                                <span class="badge bg-success">{{ scanner_status.scan_count }} 次扫描</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -63,12 +132,14 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-radar me-1"></i>最新线索</span>
-                <a href="/gather" class="btn btn-sm btn-outline-primary">查看全部</a>
+                <span><i class="bi bi-radar me-1"></i>最新情报线索</span>
+                <a href="/gather" class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-arrow-right me-1"></i>查看全部
+                </a>
             </div>
             <div class="card-body p-0">
                 <table class="table table-sm table-hover mb-0">
-                    <thead class="table-light">
+                    <thead>
                         <tr>
                             <th>时间</th>
                             <th>CID</th>
@@ -78,12 +149,29 @@
                     <tbody>
                         {% for clue in recent_clues %}
                         <tr>
-                            <td class="text-muted small">{{ clue.discovered_at.strftime('%m-%d %H:%M') }}</td>
-                            <td><code class="small">{{ clue.cid[:24] }}...</code></td>
-                            <td><span class="badge bg-secondary">{{ clue.source[:20] }}</span></td>
+                            <td class="text-muted small">{{ clue.discovered_at.strftime('%m-%d %H:%M') if clue.discovered_at else '' }}</td>
+                            <td>
+                                <code class="small">{{ clue.cid[:24] }}...</code>
+                            </td>
+                            <td>
+                                {% if 'DHT' in clue.source or 'Bitswap' in clue.source %}
+                                <span class="badge" style="background:var(--badge-gold);color:var(--police-blue-dark);">{{ clue.source[:20] }}</span>
+                                {% elif 'Reddit' in clue.source %}
+                                <span class="badge badge-police">{{ clue.source[:20] }}</span>
+                                {% elif 'Forum' in clue.source %}
+                                <span class="badge badge-shield">{{ clue.source[:20] }}</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ clue.source[:20] }}</span>
+                                {% endif %}
+                            </td>
                         </tr>
                         {% else %}
-                        <tr><td colspan="3" class="text-center text-muted py-3">暂无线索</td></tr>
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox display-6 d-block mb-2 opacity-25"></i>
+                                暂无线索，请前往<a href="/gather">情报采集</a>页面启动扫描
+                            </td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -95,36 +183,120 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-file-earmark-lock me-1"></i>最近取证</span>
-                <a href="/dashboard" class="btn btn-sm btn-outline-primary">查看全部</a>
+                <span><i class="bi bi-file-earmark-lock me-1"></i>最近取证记录</span>
+                <a href="/dashboard" class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-arrow-right me-1"></i>查看全部
+                </a>
             </div>
             <div class="card-body p-0">
                 <table class="table table-sm table-hover mb-0">
-                    <thead class="table-light">
+                    <thead>
                         <tr>
                             <th>案件号</th>
                             <th>CID</th>
                             <th>状态</th>
+                            <th>时间</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for ev in recent_evidence %}
                         <tr>
-                            <td class="small">{{ ev.case_id }}</td>
-                            <td><code class="small">{{ ev.cid[:24] }}...</code></td>
+                            <td class="small fw-bold">{{ ev.case_id }}</td>
+                            <td><code class="small">{{ ev.cid[:20] }}...</code></td>
                             <td>
                                 {% if ev.is_illegal %}
-                                <span class="badge bg-danger">涉嫌违法</span>
+                                <span class="badge badge-danger-custom">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>涉嫌违法
+                                </span>
                                 {% else %}
-                                <span class="badge bg-success">正常</span>
+                                <span class="badge badge-shield">
+                                    <i class="bi bi-check-circle me-1"></i>正常
+                                </span>
                                 {% endif %}
                             </td>
+                            <td class="text-muted small">{{ ev.created_at.strftime('%m-%d %H:%M') if ev.created_at else '' }}</td>
                         </tr>
                         {% else %}
-                        <tr><td colspan="3" class="text-center text-muted py-3">暂无记录</td></tr>
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">
+                                <i class="bi bi-folder2-open display-6 d-block mb-2 opacity-25"></i>
+                                暂无取证记录，请前往<a href="/evidence">证据固定</a>页面
+                            </td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 嗅探引擎状态 -->
+<div class="row g-3 mt-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-cpu me-1"></i>嗅探引擎运行状态
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-2 text-center">
+                        <div class="mb-1">
+                            {% if scanner_status.is_scanning %}
+                            <span class="badge bg-success p-2"><i class="bi bi-activity me-1"></i>扫描中</span>
+                            {% else %}
+                            <span class="badge bg-secondary p-2"><i class="bi bi-pause-circle me-1"></i>空闲</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="engine-status-panel text-center p-2">
+                            <div class="status-label">累计扫描</div>
+                            <div class="status-value">{{ scanner_status.scan_count }} 次</div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="engine-status-panel text-center p-2">
+                            <div class="status-label">已知CID</div>
+                            <div class="status-value">{{ scanner_status.known_cids_count }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="engine-status-panel text-center p-2">
+                            <div class="status-label">IPFS节点</div>
+                            <div class="status-value">
+                                {% if scanner_status.ipfs_node_available %}
+                                <span style="color:var(--shield-green);">● 在线</span> ({{ scanner_status.connected_peers }} peers)
+                                {% else %}
+                                <span style="color:var(--alert-red);">● 离线</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="engine-status-panel text-center p-2">
+                            <div class="status-label">上次扫描</div>
+                            <div class="status-value small">{{ scanner_status.last_scan_time or '尚未执行' }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 合规性声明 -->
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="card border-0" style="background:rgba(0,51,102,0.03);">
+            <div class="card-body py-2 px-3">
+                <small class="text-muted">
+                    <i class="bi bi-shield-check me-1"></i>
+                    本系统遵循 GA/T 2343-2025《法庭科学 电子数据保全文件技术要求》 ·
+                    采用 IF-DSS 取证框架（Son et al., 2023, DFRWS APAC） ·
+                    证据固定符合《关于办理刑事案件收集提取和审查判断电子数据若干问题的规定》 ·
+                    可信时间戳对接 RFC 3161 标准
+                </small>
             </div>
         </div>
     </div>

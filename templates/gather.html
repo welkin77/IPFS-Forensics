@@ -2,89 +2,136 @@
 {% block title %}情报采集{% endblock %}
 
 {% block content %}
-<div class="row g-3">
+<!-- 页面标题 -->
+<div class="page-header">
+    <h4><i class="bi bi-radar me-2"></i>全网情报采集</h4>
+    <p>基于IF-DSS框架 · 覆盖Node/Peer/Gateway/Internet四区域 · 多源融合嗅探</p>
+</div>
 
-    <!-- 左侧：控制台 -->
+<div class="row g-3">
+    <!-- ==================== 左侧：控制台 ==================== -->
     <div class="col-md-4">
+
+        <!-- 扫描控制 -->
         <div class="card">
             <div class="card-header">
-                <i class="bi bi-radar me-1"></i>多源嗅探控制台
+                <i class="bi bi-sliders me-1"></i>多源嗅探控制台
             </div>
             <div class="card-body">
-                <!-- 扫描表单 -->
                 <form hx-post="/api/scan"
                       hx-target="#scan-log"
                       hx-swap="beforeend"
                       hx-indicator="#scan-spinner">
 
                     <div class="input-group mb-3">
-                        <span class="input-group-text">监控词</span>
+                        <span class="input-group-text" style="background:var(--police-blue);color:#fff;border-color:var(--police-blue);">
+                            <i class="bi bi-search"></i>
+                        </span>
                         <input type="text" name="keywords" class="form-control"
-                               placeholder="诈骗, 赌博, 色情" id="keywords-input">
+                               placeholder="输入监控关键词（如：诈骗,赌博）" id="keywords-input">
                     </div>
 
-                    <div class="mb-3 text-muted small">
-                        <i class="bi bi-check-circle text-success"></i> IPFS DHT网络
-                        <i class="bi bi-check-circle text-success ms-2"></i> 公开论坛
-                        <i class="bi bi-check-circle text-success ms-2"></i> Reddit
+                    <div class="mb-3">
+                        <small class="text-muted">
+                            <i class="bi bi-check-circle-fill text-success me-1"></i>IPFS DHT/Bitswap
+                            <i class="bi bi-check-circle-fill text-success ms-2 me-1"></i>IPFS官方论坛
+                            <i class="bi bi-check-circle-fill text-success ms-2 me-1"></i>Reddit
+                        </small>
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100" id="scan-btn">
+                    <button type="submit" class="btn btn-police w-100">
+                        <span id="scan-spinner" class="htmx-indicator">
+                            <span class="spinner-border spinner-border-sm me-1"></span>
+                        </span>
                         <i class="bi bi-play-circle me-1"></i>执行一次扫描
                     </button>
                 </form>
+            </div>
+        </div>
 
-                <!-- 引擎状态 -->
-                <div class="mt-3 p-2 bg-light rounded small"
+        <!-- 引擎状态 -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <i class="bi bi-cpu me-1"></i>引擎状态
+            </div>
+            <div class="card-body p-0">
+                <div class="engine-status-panel m-2"
                      hx-get="/api/scanner-status"
                      hx-trigger="every 5s"
                      hx-swap="innerHTML"
                      id="engine-status">
-                    <div class="d-flex justify-content-between">
-                        <span>累计扫描:</span>
-                        <strong>{{ scanner_status.scan_count }} 次</strong>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="status-label">累计扫描:</span>
+                        <span class="status-value">{{ scanner_status.scan_count }} 次</span>
                     </div>
-                    <div class="d-flex justify-content-between">
-                        <span>已知CID:</span>
-                        <strong>{{ scanner_status.known_cids_count }} 个</strong>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="status-label">已知CID:</span>
+                        <span class="status-value">{{ scanner_status.known_cids_count }} 个</span>
                     </div>
-                    <div class="d-flex justify-content-between">
-                        <span>IPFS节点:</span>
-                        <strong>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="status-label">IPFS节点:</span>
+                        <span class="status-value">
                             {% if scanner_status.ipfs_node_available %}
-                            <span class="text-success">● 在线</span>
+                            <span style="color:var(--shield-green);">● 在线 ({{ scanner_status.connected_peers }})</span>
                             {% else %}
-                            <span class="text-danger">● 离线</span>
+                            <span style="color:var(--alert-red);">● 离线</span>
                             {% endif %}
-                        </strong>
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="status-label">上次扫描:</span>
+                        <span class="status-value small">{{ scanner_status.last_scan_time or '未执行' }}</span>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- URL标识符提取（IF-DSS 4.1.1） -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <i class="bi bi-link-45deg me-1"></i>URL标识符提取
+                <small class="float-end opacity-75">IF-DSS 4.1.1</small>
+            </div>
+            <div class="card-body">
+                <form hx-post="/api/extract-cids"
+                      hx-target="#extract-result"
+                      hx-swap="innerHTML">
+                    <div class="input-group mb-2">
+                        <input type="text" name="url_text" class="form-control form-control-sm"
+                               placeholder="粘贴IPFS链接或含CID的文本">
+                        <button class="btn btn-gold btn-sm" type="submit">
+                            <i class="bi bi-cpu me-1"></i>提取
+                        </button>
+                    </div>
+                </form>
+                <div id="extract-result" class="small"></div>
+            </div>
+        </div>
+
         <!-- 扫描日志终端 -->
         <div class="card mt-3">
-            <div class="card-header bg-dark text-light d-flex align-items-center">
-                <span class="dot-red me-1"></span>
-                <span class="dot-yellow me-1"></span>
-                <span class="dot-green me-1"></span>
-                <span class="ms-2 small">扫描日志</span>
-                <span id="scan-spinner" class="htmx-indicator ms-auto">
-                    <span class="spinner-border spinner-border-sm text-light"></span>
+            <div class="terminal-header">
+                <span class="dot-red"></span>
+                <span class="dot-yellow"></span>
+                <span class="dot-green"></span>
+                <span class="title-text">扫描日志 (Scan Log)</span>
+                <span id="scan-spinner-2" class="htmx-indicator ms-auto">
+                    <span class="spinner-border spinner-border-sm" style="color:var(--badge-gold);"></span>
                 </span>
             </div>
             <div class="terminal-box" id="scan-log">
-                <div class="log-info">[系统] 等待开始扫描...</div>
+                <div class="log-info">[系统] 取证引擎就绪，等待指令...</div>
             </div>
         </div>
+
     </div>
 
-    <!-- 右侧：线索池 -->
+    <!-- ==================== 右侧：线索池 ==================== -->
     <div class="col-md-8">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-collection me-1"></i>全网情报线索池</span>
-                <button class="btn btn-sm btn-outline-primary"
+                <span><i class="bi bi-collection me-1"></i>全网情报线索池 (Clue Pool)</span>
+                <button class="btn btn-sm btn-outline-light"
                         hx-get="/api/clues"
                         hx-target="#clue-table-body"
                         hx-swap="innerHTML">
@@ -92,19 +139,35 @@
                 </button>
             </div>
             <div class="card-body p-0">
-                <table class="table table-sm table-hover table-striped mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th width="150">发现时间</th>
-                            <th width="200">发现渠道</th>
-                            <th>可疑 CID</th>
-                            <th width="180">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody id="clue-table-body">
-                        {% include 'partials/clue_table.html' %}
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th width="150">发现时间</th>
+                                <th width="200">来源渠道</th>
+                                <th>可疑 CID</th>
+                                <th width="200">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clue-table-body">
+                            {% include 'partials/clue_table.html' %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- IF-DSS四区域采集覆盖说明 -->
+        <div class="card mt-3 border-0" style="background:rgba(0,51,102,0.03);">
+            <div class="card-body py-2 px-3">
+                <small class="text-muted">
+                    <i class="bi bi-info-circle me-1"></i>
+                    <strong>IF-DSS采集覆盖：</strong>
+                    <span class="badge badge-police me-1">Node</span> 本地IPFS节点Bitswap Wantlist ·
+                    <span class="badge badge-police me-1">Peer</span> DHT FindProvs提供者定位 ·
+                    <span class="badge badge-police me-1">Gateway</span> 多网关并发下载 ·
+                    <span class="badge badge-police me-1">Internet</span> IPFS论坛/Reddit公开信源
+                </small>
             </div>
         </div>
     </div>
