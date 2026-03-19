@@ -1,0 +1,97 @@
+{% if success %}
+<div class="alert alert-success">
+    <i class="bi bi-check-circle-fill me-1"></i>
+    取证与固化流水线执行完毕！数据已安全入库。
+</div>
+
+<div class="row g-3">
+    <!-- 左：哈希值 -->
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-fingerprint me-1"></i>司法证据哈希值（三重校验）
+                <a href="http://127.0.0.1:8080/ipfs/{{ cid }}" target="_blank"
+                   class="btn btn-sm btn-outline-success float-end">
+                    <i class="bi bi-box-arrow-up-right me-1"></i>网关直达
+                </a>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <td class="text-muted">文件大小</td>
+                        <td>{{ report_data.evidence_summary.file_size_bytes }} bytes</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">文件类型</td>
+                        <td>
+                            {{ analysis_results.file_type }}
+                            {% if analysis_results.is_illegal %}
+                            <span class="badge bg-danger ms-2">
+                                ⚠️ {{ analysis_results.matched_keywords | join(', ') }}
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% for algo, value in report_data.evidence_summary.hash_values.items() %}
+                    <tr>
+                        <td class="text-muted">{{ algo | upper }}</td>
+                        <td><code class="small" style="word-break:break-all;">{{ value }}</code></td>
+                    </tr>
+                    {% endfor %}
+                    <tr>
+                        <td class="text-muted">Merkle Root</td>
+                        <td><span class="badge bg-success">{{ merkle_root }}</span></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">可信时间戳</td>
+                        <td>
+                            {% if timestamp_result.success %}
+                            <span class="badge bg-primary">{{ timestamp_result.tsa_server }}</span>
+                            {{ timestamp_result.request_time }}
+                            {% else %}
+                            <span class="badge bg-warning text-dark">本地时间（降级）</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+
+                {% if analysis_results.extracted_text %}
+                <div class="mt-2">
+                    <small class="text-muted">提取文本摘要：</small>
+                    <div class="bg-light p-2 rounded small" style="max-height:80px;overflow-y:auto;">
+                        {{ analysis_results.extracted_text[:500] }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 右：监管链 -->
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-link-45deg me-1"></i>监管链 (Chain of Custody)
+            </div>
+            <div class="card-body">
+                {% for record in chain_records %}
+                <div class="d-flex mb-2">
+                    <div class="me-2">
+                        {% if loop.last %}
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                        {% else %}
+                        <i class="bi bi-circle text-primary"></i>
+                        {% endif %}
+                    </div>
+                    <div class="small">
+                        <strong>{{ record.action }}</strong>
+                        <br><span class="text-muted">{{ record.operator }} · {{ record.timestamp }}</span>
+                        <br><code class="text-muted" style="font-size:10px;">{{ record.record_hash[:16] }}...</code>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}

@@ -1,0 +1,28 @@
+{% for clue in clues %}
+<tr>
+    <td class="small text-muted">{{ clue.discovered_at.strftime('%Y/%m/%d %H:%M:%S') if clue.discovered_at else '' }}</td>
+    <td>
+        {% if 'DHT' in clue.source or 'Bitswap' in clue.source %}
+        <span class="badge bg-warning text-dark">{{ clue.source[:30] }}</span>
+        {% elif 'Reddit' in clue.source %}
+        <span class="badge bg-primary">{{ clue.source[:30] }}</span>
+        {% elif 'Forum' in clue.source %}
+        <span class="badge bg-success">{{ clue.source[:30] }}</span>
+        {% else %}
+        <span class="badge bg-secondary">{{ clue.source[:30] }}</span>
+        {% endif %}
+    </td>
+    <td><code class="small">{{ clue.cid }}</code></td>
+    <td>
+        <a href="/evidence?target_cid={{ clue.cid }}" class="btn btn-sm btn-warning">
+            <i class="bi bi-send me-1"></i>下发取证
+        </a>
+        <a href="http://127.0.0.1:8080/ipfs/{{ clue.cid }}" target="_blank"
+           class="btn btn-sm btn-outline-success" title="网关直达">
+            <i class="bi bi-box-arrow-up-right"></i>
+        </a>
+    </td>
+</tr>
+{% else %}
+<tr><td colspan="4" class="text-center text-muted py-3">暂无线索数据</td></tr>
+{% endfor %}

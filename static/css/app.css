@@ -1,0 +1,43 @@
+/* 终端样式 */
+.terminal-box {
+    background-color: #1e1e1e;
+    color: #a9b7c6;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 13px;
+    padding: 12px;
+    height: 280px;
+    overflow-y: auto;
+    line-height: 1.6;
+}
+
+.terminal-box .log-info { color: #4CAF50; margin-bottom: 2px; }
+.terminal-box .log-warning { color: #FFC107; margin-bottom: 2px; }
+.terminal-box .log-danger { color: #ff5f56; font-weight: bold; margin-bottom: 2px; }
+.terminal-box .log-success { color: #00BCD4; margin-bottom: 2px; }
+
+/* Mac风格圆点 */
+.dot-red, .dot-yellow, .dot-green {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+.dot-red { background: #ff5f56; }
+.dot-yellow { background: #ffbd2e; }
+.dot-green { background: #27c93f; }
+
+/* HTMX加载指示器 */
+.htmx-indicator { display: none; }
+.htmx-request .htmx-indicator { display: inline-block; }
+
+/* 卡片统一间距 */
+.card-header {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+/* 代码字体 */
+code {
+    font-family: 'Consolas', monospace;
+    font-size: 12px;
+}

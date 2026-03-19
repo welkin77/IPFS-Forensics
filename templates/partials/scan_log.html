@@ -1,0 +1,10 @@
+{% if new_count > 0 %}
+<div class="log-danger">[{{ status.last_scan_time }}] 🚨 发现 {{ new_count }} 条新线索！</div>
+{% for clue in clues %}
+<div class="log-info">&nbsp;&nbsp;→ {{ clue.cid[:30] }}... ({{ clue.source[:25] }})</div>
+{% endfor %}
+{% else %}
+<div class="log-success">[{{ status.last_scan_time }}] 网络安静，未发现新威胁。(已知 {{ status.known_cids_count }} CID)</div>
+{% endif %}
+<!-- 触发线索表格刷新 -->
+<div hx-get="/api/clues" hx-target="#clue-table-body" hx-swap="innerHTML" hx-trigger="load"></div>

@@ -1,0 +1,30 @@
+{% for r in records %}
+<tr>
+    <td class="small">{{ r.case_id }}</td>
+    <td><code class="small">{{ r.cid[:20] }}...</code></td>
+    <td><span class="badge bg-info">{{ r.file_type or 'N/A' }}</span></td>
+    <td class="small">{{ r.file_size }} B</td>
+    <td>
+        {% if r.is_illegal %}
+        <span class="badge bg-danger">违法</span>
+        {% else %}
+        <span class="badge bg-success">正常</span>
+        {% endif %}
+    </td>
+    <td class="small text-muted">{{ r.created_at.strftime('%Y/%m/%d %H:%M') if r.created_at else '' }}</td>
+    <td>
+        <form method="post" action="/api/export-pdf" style="display:inline;">
+            <input type="hidden" name="record_id" value="{{ r.id }}">
+            <button type="submit" class="btn btn-sm btn-outline-primary" title="导出PDF">
+                <i class="bi bi-file-pdf"></i>
+            </button>
+        </form>
+        <a href="http://127.0.0.1:8080/ipfs/{{ r.cid }}" target="_blank"
+           class="btn btn-sm btn-outline-success" title="网关直达">
+            <i class="bi bi-box-arrow-up-right"></i>
+        </a>
+    </td>
+</tr>
+{% else %}
+<tr><td colspan="7" class="text-center text-muted py-3">暂无记录</td></tr>
+{% endfor %}
