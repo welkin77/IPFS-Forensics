@@ -30,12 +30,12 @@ class EvidenceReportGenerator:
                 "hash_values": evidence.hashes
             },
             "verification_proof": {
-                "merkle_root": evidence.merkle_root,
+                "integrity_hash": evidence.integrity_hash,
                 "verification_steps": [
                     "1. 从公网IPFS网关/节点获取数据",
-                    "2. 计算 SHA256 与 SHA512 本地司法哈希",
-                    "3. 计算 Keccak-256 以太坊上链哈希",
-                    "4. 构建证据及元数据的默克尔树"
+                    "2. 计算 SHA-256、SHA-512、Keccak-256 多重哈希",
+                    "3. 构建证据包JSON并计算整体SHA-256完整性哈希",
+                    "4. 申请RFC 3161可信时间戳"
                 ]
             },
             "chain_of_custody": custody_chain.export_chain(),
